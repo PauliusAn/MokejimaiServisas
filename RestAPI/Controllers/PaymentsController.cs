@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Domain.Entities;
 using Domain.ExternalServices.CardIssuerService;
-using Domain.ExternalServices.MerchantService;
 using Domain.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using RestAPI.Models.Requests;
@@ -37,6 +36,7 @@ namespace RestAPI.Controllers
             };
 
             await _paymentRepository.Add(payment);
+            Console.WriteLine($"[{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}.{DateTime.Now.Millisecond}] Naujas mokėjimas sukurtas. Mokėjimo ID: {payment.Id}");
 
             return Ok(new {paymentId = payment.Id});
         }
@@ -59,6 +59,7 @@ namespace RestAPI.Controllers
             payment.Status = request.Status;
 
             await _paymentRepository.Update(payment);
+            Console.WriteLine($"[{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}.{DateTime.Now.Millisecond}] Vartotojas patvirtino mokėjimą. Mokėjimo ID: {payment.Id}");
 
             try
             {
@@ -67,6 +68,10 @@ namespace RestAPI.Controllers
             }
             catch(Exception)
             {
+                payment.Status = PaymentStatus.Created;
+                await _paymentRepository.Update(payment);
+                Console.WriteLine($"[{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}.{DateTime.Now.Millisecond}] Mokėjimo statusas grąžintas į pradinę padėtį. Mokėjimo ID: {payment.Id}");
+
                 return StatusCode(500);
             }
 

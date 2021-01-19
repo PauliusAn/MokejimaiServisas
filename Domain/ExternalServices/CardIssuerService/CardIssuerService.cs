@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Domain.Entities;
 using Domain.ExternalServices.MerchantService;
 using Refit;
@@ -19,6 +20,7 @@ namespace Domain.ExternalServices.CardIssuerService
         public async Task ReservePayment(Payment payment)
         {
             await _cardIssuerApi.ReservePayment();
+            Console.WriteLine($"[{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}.{DateTime.Now.Millisecond}] Mokėjimas sėkmingai užrezervuotas. Mokėjimo ID: {payment.Id}");
             await _merchantService.AddPayment(payment);
         }
 
@@ -30,7 +32,10 @@ namespace Domain.ExternalServices.CardIssuerService
             }
             catch (ApiException)
             {
+                Console.WriteLine($"[{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}.{DateTime.Now.Millisecond}] Mokėjimo užfiksavimas nepavyko. Mokėjimo ID: {payment.Id}");
+                
                 // Pritaikomas SAGA metodas atstatytant sistemą į pradinę būseną
+                Console.WriteLine($"[{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}.{DateTime.Now.Millisecond}] Sistema grąžinama į pradinę padėtį. Mokėjimo ID: {payment.Id}");
                 await _merchantService.DeletePayment(payment.Id);
                 await _cardIssuerApi.ReleasePayment();
 
